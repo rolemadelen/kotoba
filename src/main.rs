@@ -1,66 +1,80 @@
-use std::io::{Write, stdin, stdout};
-use std::fs::create_dir_all;
+// use std::io::{Write, stdin, stdout};
+use std::collections::HashMap;
+use std::fs::{create_dir_all, File};
+use std::io::BufReader;
 use std::path::PathBuf;
-use std::process::exit;
+use serde::Deserialize;
 
-fn get_input() -> i32 {
-    let mut buf = String::new();
-    stdin().read_line(&mut buf).unwrap();
-    buf.trim().parse::<i32>().unwrap()
+#[derive(Debug, Deserialize)]
+struct Word {
+    kanji: String,
+    kana: String,
+    definition: String,
+    sentence: String,
 }
 
-fn show_menu() -> i32 {
-    println!("1. Add a word");
-    println!("2. Delete a word");
-    println!("3. Review");
-    println!("0. Quit");
-    print!("> ");
-    let _ = stdout().flush();
-
-    get_input()
+struct AppConfig {
+    base_dir: String,
+    file_name: String
 }
 
-fn add_word() -> Option<i32> {
-    println!("add word");
-    Some(1)
+impl AppConfig {
+    fn new(path: &str, file: &str) -> AppConfig {
+        AppConfig {
+            base_dir: path.to_string(),
+            file_name: file.to_string()
+        }
+    }
+    
+    fn init(&self) -> () {
+        let home_dir = dirs::home_dir().expect("Failed to get home directory");
+        let jpvoca_dir: PathBuf = home_dir.join(&self.base_dir);
+        
+        if !jpvoca_dir.exists() {
+            create_dir_all(&jpvoca_dir).expect("Failed to create tracker directory");
+            println!("jpvoca directory created at {:?}", jpvoca_dir);
+        } else {
+            println!("jpvoca directory exists");
+        }
+    }
+    
+    fn get_words(&self) -> Vec<Word> {
+        let home_dir = dirs::home_dir().expect("Failed to get home directory");
+        let file_path: PathBuf = home_dir.join(&self.base_dir).join(&self.file_name);
+
+        if !file_path.exists() {
+            println!("No existing data found.");
+            return Vec::new();
+        }
+
+        let file = File::open(&file_path).expect("Failed to open data file");
+        let reader = BufReader::new(file);
+
+        let words_map: HashMap<String, Word> = serde_json::from_reader(reader).expect("Failed to parse JSON");
+
+        words_map.into_values().collect()
+    }
 }
 
-fn delete_word() -> Option<i32> {
-    println!("delete word");
-    Some(2)
+struct App {
+    words: Vec<Word>
 }
 
-fn review() -> Option<i32> {
-    println!("review");
-    Some(3)
-}
-
-fn init() -> () {
-    let home_dir = dirs::home_dir().expect("Failed to get home directory");
-    let jpvoca_dir: PathBuf = home_dir.join(".jpvoca");
-    if !jpvoca_dir.exists() {
-        create_dir_all(&jpvoca_dir).expect("Failed to create tracker directory");
-        println!("jpvoca directory created at {:?}", jpvoca_dir);
-    } else {
-        println!("jpvoca directory exists");
+impl App {
+    fn new(data: Vec<Word>) -> App {
+        App {
+            words: data
+        }
     }
 }
 
 fn main() {
-    init();
+    let config = AppConfig::new(".jpvoca", "data.json");
+    config.init();
 
-    let Some(option) = (match show_menu() {
-        1 => add_word(),
-        2 => delete_word(),
-        3 => review(),
-        _ => Some(-1),
-    }) else {
-        println!("NONE");
-        todo!()
-    };
-
-    if option == -1 {
-        println!("thank you");
-        exit(1);
+    // let words = config.get_words();
+    let app = App::new(config.get_words());
+    for word in app.words {
+        println!("{:?}", word);
     }
 }
