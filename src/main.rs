@@ -45,6 +45,7 @@ impl Word {
 
         Word { kanji, kana, definition, sentence }
     }
+
 }
 
 struct AppConfig {
@@ -113,27 +114,34 @@ impl App {
         read_int()
     }
 
+    fn find(&self, target: &str) -> (usize, bool) {
+        for (idx, word) in self.words.iter().enumerate() {
+            if word.kanji == target || word.kana == target {
+                return (idx, true);
+            }
+        }
+
+        (0, false)
+    }
+
     fn add_word(&mut self) { 
         let word = Word::new();
         self.words.push(word);
-
-        // let home_dir = dirs::home_dir().expect("Failed to get home directory");
-        // let file_path: PathBuf = home_dir.join(".jpvoca").join("data.json");
-
-        // // Read existing words
-        // let words_map: HashMap<String, Word> = self.words
-        //     .iter()
-        //     .enumerate()
-        //     .map(|(i, w)| (i.to_string(), w.clone()))
-        //     .collect();
-
-        // let file = File::create(&file_path).expect("Failed to open data file for writing");
-        // let writer = BufWriter::new(file);
-        // serde_json::to_writer_pretty(writer, &words_map).expect("Failed to write to JSON");
     }
     
-    fn delete_word(&self) { 
-        println!("delete a new word");
+    fn delete_word(&mut self) { 
+        print!("Enter a word to delete: ");
+        let _ = stdout().flush();
+        let target = read_str();
+
+        let (idx, is_found) = self.find(&target);
+        if !is_found {
+            println!("'{}' not in the list.", target);
+        } else {
+            println!("found at {}", idx);
+            self.words.remove(idx);
+        }
+        
     }
 
     fn review(&self) { 
