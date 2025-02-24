@@ -5,6 +5,10 @@ use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
 
+fn clear_screen() {
+    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+}
+
 fn read_int() -> i32 {
     let mut buf = String::new();
     let _ = stdin().read_line(&mut buf);
@@ -69,6 +73,7 @@ impl AppConfig {
             create_dir_all(&jpvoca_dir).expect("Failed to create tracker directory");
             println!("jpvoca directory created at {:?}", jpvoca_dir);
         }
+        clear_screen();
     }
     
     fn get_words(&self) -> Vec<Word> {
@@ -107,6 +112,7 @@ impl App {
         println!("1. Add a word");
         println!("2. Delete a word");
         println!("3. Review");
+        println!("4. View all words");
         println!("99. Quit");
         print!("> ");
         let _ = stdout().flush();
@@ -126,26 +132,75 @@ impl App {
 
     fn add_word(&mut self) { 
         let word = Word::new();
+        clear_screen();
+        println!("\n「{} - {}」 added\n", word.kanji, word.definition);
         self.words.push(word);
+
     }
     
     fn delete_word(&mut self) { 
-        print!("Enter a word to delete: ");
+        clear_screen();
+        self.view_words();
+
+        print!("Enter a word to delete (type 'ret' to return): ");
         let _ = stdout().flush();
         let target = read_str();
 
+        if target.to_lowercase() == "ret".to_string() {
+            clear_screen();
+            return;
+        }
+
         let (idx, is_found) = self.find(&target);
         if !is_found {
-            println!("'{}' not in the list.", target);
+            println!("\n「{}」 not found.\n", target);
         } else {
-            println!("found at {}", idx);
+            println!("\n「{}」 deleted.\n", target);
             self.words.remove(idx);
         }
-        
     }
 
-    fn review(&self) { 
-        println!("review");
+    fn review_all(&self) {
+        let words = &self.words;
+        let total = words.len();
+        let mut correct = 0;
+
+        for word in words {
+            print!("「{}」 in kana: ", word.kanji);
+            let _ = stdout().flush();
+            let kana = read_str();
+            if kana == word.kana {
+                println!("CORRECT!\n");
+                correct += 1;
+            } else {
+                println!("WRONG!\n");
+            }
+        }
+
+        println!("{} out of {} words ({}%)\n", correct, total, (correct as f32 / total as f32 * 100.0));
+    }
+
+    fn review_words(&self) {
+        clear_screen(); 
+        println!("Select the review option.");
+        println!("1. All");
+        print!("> ");
+        let _ = stdout().flush();
+        let op = read_int();
+
+        match op {
+            1 => self.review_all(),
+            _ => return
+        }
+    }
+
+    fn view_words(&self) {
+        clear_screen();
+        println!("---");
+        for (idx, word) in self.words.iter().enumerate() {
+            println!("{}. {} - {}", idx, word.kanji, word.definition);
+        }
+        println!("---");
     }
 
     fn save_words(&mut self) {
@@ -171,23 +226,18 @@ fn main() {
     config.init();
 
     let mut app = App::new(config.get_words());
-    
-    for word in &app.words {
-        println!("{:?}", word);
-    }
 
     while app.is_running == true {
         let op = app.display_menu();
-        println!("running {}", op);
 
         match op {
             1 => app.add_word(),
             2 => app.delete_word(),
-            3 => app.review(),
+            3 => app.review_words(),
+            4 => app.view_words(),
             _ => app.is_running = false
         }
     }
 
     app.save_words();
-    println!("terminated");
 }
