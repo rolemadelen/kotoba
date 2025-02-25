@@ -4,6 +4,9 @@ use std::fs::{create_dir_all, File};
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
+use rand::{SeedableRng, Rng};
+use rand::rngs::SmallRng;
+use rand::prelude::SliceRandom;
 
 fn clear_screen() {
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
@@ -160,27 +163,58 @@ impl App {
         }
     }
 
-    fn review_all(&self) {
-        let words = &self.words;
+    fn review_all(&mut self) {
+        let words = &mut self.words;
+        words.shuffle(&mut rand::rng());
         let total = words.len();
         let mut correct = 0;
 
         for word in words {
-            print!("「{}」 in kana: ", word.kanji);
-            let _ = stdout().flush();
-            let kana = read_str();
-            if kana == word.kana {
-                println!("CORRECT!\n");
-                correct += 1;
-            } else {
-                println!("WRONG!\n");
+            let mut rng = SmallRng::from_rng(&mut rand::rng());
+            let variant = rng.random::<u8>() % 3;
+
+            match variant {
+                0 => {
+                        print!("「{}」 in kana: ", word.kanji);
+                        let _ = stdout().flush();
+                        let kana = read_str();
+                        if kana == word.kana {
+                            println!("CORRECT!\n");
+                            correct += 1;
+                        } else {
+                            println!("WRONG!\n");
+                        }
+                    },
+                1 => {
+                    print!("「{}」 in kanji: ", word.kana);
+                    let _ = stdout().flush();
+                    let kana = read_str();
+                    if kana == word.kanji {
+                        println!("CORRECT!\n");
+                        correct += 1;
+                    } else {
+                        println!("WRONG!\n");
+                    }
+                },
+                2 => {
+                    print!("'{}' in Japanese: ", word.definition);
+                    let _ = stdout().flush();
+                    let ans = read_str();
+                    if ans == word.kanji || ans == word.kana {
+                        println!("CORRECT!\n");
+                        correct += 1;
+                    } else {
+                        println!("WRONG!\n");
+                    }
+                }
+                _ => ()
             }
         }
 
         println!("{} out of {} words ({}%)\n", correct, total, (correct as f32 / total as f32 * 100.0));
     }
 
-    fn review_words(&self) {
+    fn review_words(&mut self) {
         clear_screen(); 
         println!("Select the review option.");
         println!("1. All");
