@@ -136,7 +136,6 @@ impl App {
     fn add_word(&mut self) { 
         let word = Word::new();
         clear_screen();
-        println!("\n\t「{} - {}」 added", word.kanji, word.definition);
         println!("\n\t「{} ({}) - {}」 added\n\n", word.kanji, word.kana, word.definition);
         self.words.push(word);
 
@@ -146,12 +145,22 @@ impl App {
         clear_screen();
         self.view_words();
 
-        print!("Enter a word to delete (type 'ret' to return): ");
+        print!("Enter a word or number to delete (type 'ret' to return): ");
         let _ = stdout().flush();
         let target = read_str();
 
         if target.to_lowercase() == "ret".to_string() {
             clear_screen();
+            return;
+        }
+
+        let x = &target.parse::<i32>().unwrap();
+        if *x > self.words.len() as i32 {
+            println!("\nInvalid number.\n");
+            return;
+        } else if *x > 0 && *x < self.words.len() as i32 {
+            println!("\n「{}」 deleted.\n", self.words[*x as usize].kanji);
+            self.words.remove(*x as usize);
             return;
         }
 
