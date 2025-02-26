@@ -136,7 +136,8 @@ impl App {
     fn add_word(&mut self) { 
         let word = Word::new();
         clear_screen();
-        println!("\n「{} - {}」 added\n", word.kanji, word.definition);
+        println!("\n\t「{} - {}」 added", word.kanji, word.definition);
+        println!("\n\t「{} ({}) - {}」 added\n\n", word.kanji, word.kana, word.definition);
         self.words.push(word);
 
     }
@@ -171,32 +172,21 @@ impl App {
 
         for word in words {
             let mut rng = SmallRng::from_rng(&mut rand::rng());
-            let variant = rng.random::<u8>() % 3;
+            let variant = rng.random::<u8>() % 2;
 
             match variant {
                 0 => {
-                        print!("「{}」 in kana: ", word.kanji);
+                        print!("「{} - {}」 in kana: ", word.kanji, word.definition);
                         let _ = stdout().flush();
                         let kana = read_str();
                         if kana == word.kana {
                             println!("CORRECT!\n");
                             correct += 1;
                         } else {
-                            println!("WRONG!\n");
+                            println!("WRONG! --  {}\n", word.kana);
                         }
                     },
                 1 => {
-                    print!("「{}」 in kanji: ", word.kana);
-                    let _ = stdout().flush();
-                    let kana = read_str();
-                    if kana == word.kanji {
-                        println!("CORRECT!\n");
-                        correct += 1;
-                    } else {
-                        println!("WRONG!\n");
-                    }
-                },
-                2 => {
                     print!("'{}' in Japanese: ", word.definition);
                     let _ = stdout().flush();
                     let ans = read_str();
@@ -204,7 +194,7 @@ impl App {
                         println!("CORRECT!\n");
                         correct += 1;
                     } else {
-                        println!("WRONG!\n");
+                        println!("WRONG! -- {} ({})\n", word.kanji, word.kana);
                     }
                 }
                 _ => ()
@@ -218,13 +208,17 @@ impl App {
         clear_screen(); 
         println!("Select the review option.");
         println!("1. All");
+        println!("99. Return");
         print!("> ");
         let _ = stdout().flush();
         let op = read_int();
 
         match op {
             1 => self.review_all(),
-            _ => return
+            _ => {
+                clear_screen();
+                return
+            }
         }
     }
 
@@ -232,7 +226,7 @@ impl App {
         clear_screen();
         println!("---");
         for (idx, word) in self.words.iter().enumerate() {
-            println!("{}. {} - {}", idx, word.kanji, word.definition);
+            println!("{}. {} ({}) - {}", idx, word.kanji, word.kana, word.definition);
         }
         println!("---");
     }
