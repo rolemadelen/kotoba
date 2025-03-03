@@ -8,6 +8,27 @@ use rand::{SeedableRng, Rng};
 use rand::rngs::SmallRng;
 use rand::prelude::SliceRandom;
 
+fn print_logo() {
+    let ascii_art = r###"
+                                                                    
+           ,--.                                                     
+       ,--/  /|             ___                                     
+    ,---,': / '           ,--.'|_             ,---,                 
+    :   : '/ /   ,---.    |  | :,'   ,---.  ,---.'|                 
+    |   '   ,   '   ,'\   :  : ' :  '   ,'\ |   | :                 
+    '   |  /   /   /   |.;__,'  /  /   /   |:   : :      ,--.--.    
+    |   ;  ;  .   ; ,. :|  |   |  .   ; ,. ::     |,-.  /       \   
+    :   '   \ '   | |: ::__,'| :  '   | |: :|   : '  | .--.  .-. |  
+    |   |    ''   | .; :  '  : |__'   | .; :|   |  / :  \__\/: . .  
+    '   : |.  \   :    |  |  | '.'|   :    |'   : |: |  ," .--.; |  
+    |   | '_\.'\   \  /   ;  :    ;\   \  / |   | '/ : /  /  ,.  |  
+    '   : |     `----'    |  ,   /  `----'  |   :    |;  :   .'   \ 
+    ;   |,'                ---`-'           /    \  / |  ,     .-./ 
+    '---'                                   `-'----'   `--`---'     
+                                                                    
+    "###;
+    println!("{}", ascii_art);
+}
 fn clear_screen() {
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 }
@@ -178,39 +199,48 @@ impl App {
         words.shuffle(&mut rand::rng());
         let total = words.len();
         let mut correct = 0;
+        let mut problems = 0;
 
         for word in words {
+            clear_screen();
+            problems += 1;
             let mut rng = SmallRng::from_rng(&mut rand::rng());
             let variant = rng.random::<u8>() % 2;
 
             match variant {
                 0 => {
-                        print!("「{} - {}」 in kana: ", word.kanji, word.definition);
+                        print!("#{}.「{} - {}」 in kana: ", problems, word.kanji, word.definition);
                         let _ = stdout().flush();
                         let kana = read_str();
                         if kana == word.kana {
-                            println!("CORRECT!\n");
+                            println!("CORRECT!\n\nPress Enter.\n");
                             correct += 1;
                         } else {
-                            println!("WRONG! --  {}\n", word.kana);
+                            println!("WRONG!\nThe correct answer is 「{}」\n", word.kana);
+                            println!("Press Enter.\n");
                         }
                     },
-                1 => {
-                    print!("'{}' in Japanese: ", word.definition);
-                    let _ = stdout().flush();
-                    let ans = read_str();
-                    if ans == word.kanji || ans == word.kana {
-                        println!("CORRECT!\n");
-                        correct += 1;
-                    } else {
-                        println!("WRONG! -- {} ({})\n", word.kanji, word.kana);
+                    1 => {
+                        print!("#{}. '{}' in Japanese: ", problems, word.definition);
+                        let _ = stdout().flush();
+                        let ans = read_str();
+                        if ans == word.kanji || ans == word.kana {
+                            println!("CORRECT!\n\nPress Enter.\n");
+                            correct += 1;
+                        } else {
+                            println!("WRONG!\nThe correct answer is 「{} ({})」\n", word.kanji, word.kana);
+                            println!("Press Enter.\n");
+                        }
                     }
+                    _ => ()
                 }
-                _ => ()
+                read_str();
             }
-        }
-
-        println!("{} out of {} words ({}%)\n", correct, total, (correct as f32 / total as f32 * 100.0));
+            
+            println!("You got {} out of {} words correct: {}%\n", correct, total, (correct as f32 / total as f32 * 100.0));
+            println!("Press Enter to go back to the main menu.\n");
+            read_str();
+            clear_screen();
     }
 
     fn review_words(&mut self) {
@@ -243,14 +273,14 @@ impl App {
     fn save_words(&mut self) {
         let home_dir = dirs::home_dir().expect("Failed to get home directory");
         let file_path: PathBuf = home_dir.join(".jpvoca").join("data.json");
-
+        
         // Read existing words
         let words_map: HashMap<String, Word> = self.words
             .iter()
             .enumerate()
             .map(|(i, w)| (i.to_string(), w.clone()))
             .collect();
-
+        
         let file = File::create(&file_path).expect("Failed to open data file for writing");
         let writer = BufWriter::new(file);
         serde_json::to_writer_pretty(writer, &words_map).expect("Failed to write to JSON");
@@ -265,6 +295,7 @@ fn main() {
     let mut app = App::new(config.get_words());
 
     while app.is_running == true {
+        print_logo();
         let op = app.display_menu();
 
         match op {
