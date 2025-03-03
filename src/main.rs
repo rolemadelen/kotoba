@@ -91,11 +91,11 @@ impl AppConfig {
     
     fn init(&self) -> () {
         let home_dir = dirs::home_dir().expect("Failed to get home directory");
-        let jpvoca_dir: PathBuf = home_dir.join(&self.base_dir);
+        let kotoba_dir: PathBuf = home_dir.join(&self.base_dir);
         
-        if !jpvoca_dir.exists() {
-            create_dir_all(&jpvoca_dir).expect("Failed to create tracker directory");
-            println!("jpvoca directory created at {:?}", jpvoca_dir);
+        if !kotoba_dir.exists() {
+            create_dir_all(&kotoba_dir).expect("Failed to create tracker directory");
+            println!("kotoba directory created at {:?}", kotoba_dir);
         }
         clear_screen();
     }
@@ -272,7 +272,7 @@ impl App {
 
     fn save_words(&mut self) {
         let home_dir = dirs::home_dir().expect("Failed to get home directory");
-        let file_path: PathBuf = home_dir.join(".jpvoca").join("data.json");
+        let file_path: PathBuf = home_dir.join(".kotoba").join("data.json");
         
         // Read existing words
         let words_map: HashMap<String, Word> = self.words
@@ -289,7 +289,7 @@ impl App {
 }
 
 fn main() {
-    let config = AppConfig::new(".jpvoca", "data.json");
+    let config = AppConfig::new(".kotoba", "data.json");
     config.init();
 
     let mut app = App::new(config.get_words());

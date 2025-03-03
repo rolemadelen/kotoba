@@ -1,4 +1,4 @@
-## jpvoca
+## kotoba
 
 in progress...
 
@@ -6,7 +6,7 @@ in progress...
 ### ideation: menu
 without a parameter
 ```sh
-$> jpvoca
+$> kotoba
 
 1. add a word
 2. delete a word
@@ -17,7 +17,7 @@ $> jpvoca
 
 with parameters
 ```sh
-$> jpvoca 食べる たべる "to eat"
+$> kotoba 食べる たべる "to eat"
 
 	食べる (たべる) - "to eat" added
 
@@ -25,11 +25,11 @@ $> _
 ```
 
 ### ideation: init
-when first running `jpvoca`, create a hidden folder `.jpvoca` at the root with `vocab.json` inside.
+when first running `kotoba`, create a hidden folder `.kotoba` at the root with `vocab.json` inside.
 
 ### ideation: adding a word
 ```
-$> jpvoca
+$> kotoba
 > 1
 
 Kanji: 食べる
