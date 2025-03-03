@@ -105,7 +105,6 @@ impl AppConfig {
         let file_path= home_dir.join(&self.base_dir).join(&self.file_name);
 
         if !file_path.exists() {
-            println!("No existing data found.");
             return Vec::new();
         }
 
@@ -155,8 +154,8 @@ impl App {
     }
 
     fn add_word(&mut self) { 
-        let word = Word::new();
         clear_screen();
+        let word = Word::new();
         println!("\n\t「{} ({}) - {}」 added\n\n", word.kanji, word.kana, word.definition);
         self.words.push(word);
 
@@ -164,6 +163,14 @@ impl App {
     
     fn delete_word(&mut self) { 
         clear_screen();
+        if self.words.len() == 0 {
+            println!("Your list is empty!");
+            println!("Press Enter to go back to the main menu.");
+            read_str();
+            clear_screen();
+            return;
+        }
+
         self.view_words();
 
         print!("Enter a word or number to delete (type 'ret' to return): ");
@@ -197,8 +204,6 @@ impl App {
     fn review_all(&mut self) {
         let words = &mut self.words;
         words.shuffle(&mut rand::rng());
-        let total = words.len();
-        let mut correct = 0;
         let mut problems = 0;
 
         for word in words {
@@ -211,25 +216,32 @@ impl App {
                 0 => {
                         print!("#{}.「{} - {}」 in kana: ", problems, word.kanji, word.definition);
                         let _ = stdout().flush();
-                        let kana = read_str();
-                        if kana == word.kana {
-                            println!("CORRECT!\n\nPress Enter.\n");
-                            correct += 1;
-                        } else {
-                            println!("WRONG!\nThe correct answer is 「{}」\n", word.kana);
-                            println!("Press Enter.\n");
+
+                        loop {
+                            let kana = read_str();
+                            if kana == word.kana {
+                                println!("CORRECT!\n\nPress Enter.\n");
+                                break;
+                            } else {
+                                println!("WRONG! Try again.");
+                                print!("> ");
+                                let _ = stdout().flush();
+                            }
                         }
                     },
                     1 => {
                         print!("#{}. '{}' in Japanese: ", problems, word.definition);
                         let _ = stdout().flush();
-                        let ans = read_str();
-                        if ans == word.kanji || ans == word.kana {
-                            println!("CORRECT!\n\nPress Enter.\n");
-                            correct += 1;
-                        } else {
-                            println!("WRONG!\nThe correct answer is 「{} ({})」\n", word.kanji, word.kana);
-                            println!("Press Enter.\n");
+                        loop {
+                            let ans = read_str();
+                            if ans == word.kanji || ans == word.kana {
+                                println!("CORRECT!\n\nPress Enter.\n");
+                                break;
+                            } else {
+                                println!("WRONG! Try again.");
+                                print!("> ");
+                                let _ = stdout().flush();
+                            }
                         }
                     }
                     _ => ()
@@ -237,7 +249,6 @@ impl App {
                 read_str();
             }
             
-            println!("You got {} out of {} words correct: {}%\n", correct, total, (correct as f32 / total as f32 * 100.0));
             println!("Press Enter to go back to the main menu.\n");
             read_str();
             clear_screen();
@@ -245,8 +256,15 @@ impl App {
 
     fn review_words(&mut self) {
         clear_screen(); 
+        if self.words.len() == 0 {
+            println!("Your list is empty!");
+            println!("Press Enter to go back to the main menu.");
+            read_str();
+            clear_screen();
+            return;
+        }
         println!("Select the review option.");
-        println!("1. All");
+        println!("1. All ({})", self.words.len());
         println!("99. Return");
         print!("> ");
         let _ = stdout().flush();
@@ -264,8 +282,12 @@ impl App {
     fn view_words(&self) {
         clear_screen();
         println!("---");
-        for (idx, word) in self.words.iter().enumerate() {
-            println!("{}. {} ({}) - {}", idx, word.kanji, word.kana, word.definition);
+        if self.words.len() == 0 {
+            println!("empty");
+        } else {
+            for (idx, word) in self.words.iter().enumerate() {
+                println!("{}. {} ({}) - {}", idx, word.kanji, word.kana, word.definition);
+            }
         }
         println!("---");
     }
@@ -293,11 +315,11 @@ fn main() {
     config.init();
 
     let mut app = App::new(config.get_words());
-
+    
     while app.is_running == true {
         print_logo();
         let op = app.display_menu();
-
+        
         match op {
             1 => app.add_word(),
             2 => app.delete_word(),
