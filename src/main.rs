@@ -313,6 +313,13 @@ impl App {
             println!("empty");
         } else {
             for (idx, word) in self.words.iter().enumerate() {
+                if word.difficulty == "easy".to_string() {
+                    print!("🟢 ");
+                } else if word.difficulty == "medium".to_string() {
+                    print!("🟡 ");
+                } else {
+                    print!("🔴 ");
+                }
                 println!("{}. {} ({}) - {}", idx, word.kanji, word.kana, word.definition);
                 println!("\te.g) {}\n", word.sentence);
             }
