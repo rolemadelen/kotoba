@@ -51,6 +51,7 @@ struct Word {
     kana: String,
     definition: String,
     sentence: String,
+    difficulty: String
 }
 
 impl Word {
@@ -71,7 +72,9 @@ impl Word {
         let _ = stdout().flush();
         let sentence = read_str();
 
-        Word { kanji, kana, definition, sentence }
+        let difficulty = "hard".to_string();
+
+        Word { kanji, kana, definition, sentence,  difficulty}
     }
 
 }
@@ -209,8 +212,10 @@ impl App {
         for word in words {
             clear_screen();
             problems += 1;
+
             let mut rng = SmallRng::from_rng(&mut rand::rng());
             let variant = rng.random::<u8>() % 2;
+            let mut wrong_count = 0;
 
             match variant {
                 0 => {
@@ -219,10 +224,21 @@ impl App {
 
                         loop {
                             let kana = read_str();
-                            if kana == word.kana {
+                            if wrong_count >=5 {
+                                word.difficulty = "hard".to_string();
+                                println!("Wrong! The correct answer is {}", word.kana);
+                                println!("Press Enter.\n");
+                                break;
+                            } else if kana == word.kana {
+                                match wrong_count {
+                                    0 => word.difficulty = "easy".to_string(),
+                                    1..=2 => word.difficulty = "medium".to_string(),
+                                    _ => word.difficulty = "hard".to_string()
+                                }
                                 println!("CORRECT!\n\nPress Enter.\n");
                                 break;
                             } else {
+                                wrong_count += 1;
                                 println!("WRONG! Try again.");
                                 print!("> ");
                                 let _ = stdout().flush();
@@ -234,10 +250,21 @@ impl App {
                         let _ = stdout().flush();
                         loop {
                             let ans = read_str();
-                            if ans == word.kanji || ans == word.kana {
+                            if wrong_count >=5 {
+                                word.difficulty = "hard".to_string();
+                                println!("Wrong! The correct answer is {}", word.kana);
+                                println!("Press Enter.\n");
+                                break;
+                            } else if ans == word.kanji || ans == word.kana {
+                                match wrong_count {
+                                    0 => word.difficulty = "easy".to_string(),
+                                    1..=2 => word.difficulty = "medium".to_string(),
+                                    _ => word.difficulty = "hard".to_string()
+                                }
                                 println!("CORRECT!\n\nPress Enter.\n");
                                 break;
                             } else {
+                                wrong_count += 1;
                                 println!("WRONG! Try again.");
                                 print!("> ");
                                 let _ = stdout().flush();
@@ -287,6 +314,7 @@ impl App {
         } else {
             for (idx, word) in self.words.iter().enumerate() {
                 println!("{}. {} ({}) - {}", idx, word.kanji, word.kana, word.definition);
+                println!("\te.g) {}\n", word.sentence);
             }
         }
         println!("---");
