@@ -204,12 +204,16 @@ impl App {
         }
     }
 
-    fn review_all(&mut self) {
-        let words = &mut self.words;
+    fn review_all(&mut self, level: &str) {
+        let words: &mut Vec<Word> = &mut self.words;
         words.shuffle(&mut rand::rng());
         let mut problems = 0;
 
         for word in words {
+            if level=="easy" && &word.difficulty != "easy" { continue; }
+            else if level=="medium" && &word.difficulty != "medium" { continue; }
+            else if level=="hard" && &word.difficulty != "hard" { continue; }
+            
             clear_screen();
             problems += 1;
 
@@ -290,15 +294,28 @@ impl App {
             clear_screen();
             return;
         }
+
+        let words = self.words.clone();
+
+        let easy_cnt = words.clone().into_iter().filter(|x| x.difficulty == "easy".to_string()).collect::<Vec<_>>().len();
+        let medium_cnt = words.clone().into_iter().filter(|x| x.difficulty == "medium".to_string()).collect::<Vec<_>>().len();
+        let hard_cnt = words.clone().into_iter().filter(|x| x.difficulty == "hard".to_string()).collect::<Vec<_>>().len();
+
         println!("Select the review option.");
         println!("1. All ({})", self.words.len());
+        println!("2. Easy ({})", easy_cnt);
+        println!("3. Medium ({})", medium_cnt);
+        println!("4. Hard ({})", hard_cnt);
         println!("99. Return");
         print!("> ");
         let _ = stdout().flush();
         let op = read_int();
 
         match op {
-            1 => self.review_all(),
+            1 => self.review_all("all"),
+            2 => self.review_all("easy"),
+            3 => self.review_all("medium"),
+            4 => self.review_all("hard"),
             _ => {
                 clear_screen();
                 return
@@ -320,7 +337,7 @@ impl App {
                 } else {
                     print!("🔴 ");
                 }
-                println!("{}. {} ({}) - {}", idx, word.kanji, word.kana, word.definition);
+                println!("{}. {} ({}) - {}", idx + 1, word.kanji, word.kana, word.definition);
                 println!("\te.g) {}\n", word.sentence);
             }
         }
