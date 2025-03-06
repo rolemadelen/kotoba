@@ -33,12 +33,6 @@ fn clear_screen() {
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 }
 
-fn read_int() -> i32 {
-    let mut buf = String::new();
-    let _ = stdin().read_line(&mut buf);
-    buf.trim().parse::<i32>().unwrap()
-}
-
 fn read_str() -> String {
     let mut buf = String::new();
     let _ = stdin().read_line(&mut buf);
@@ -143,7 +137,15 @@ impl App {
         print!("> ");
         let _ = stdout().flush();
 
-        read_int()
+        let input = read_str().parse::<i32>();
+        match input {
+            Ok(op) => return op,
+            _ => {
+                clear_screen();
+                print_logo();
+                self.display_menu()
+            }
+        }
     }
 
     fn find(&self, target: &str) -> (usize, bool) {
@@ -213,7 +215,7 @@ impl App {
             if level=="easy" && &word.difficulty != "easy" { continue; }
             else if level=="medium" && &word.difficulty != "medium" { continue; }
             else if level=="hard" && &word.difficulty != "hard" { continue; }
-            
+
             clear_screen();
             problems += 1;
 
@@ -309,7 +311,10 @@ impl App {
         println!("99. Return");
         print!("> ");
         let _ = stdout().flush();
-        let op = read_int();
+        let op = match read_str().parse::<i32>() {
+            Ok(x) => x,
+            _ => 99
+        };
 
         match op {
             1 => self.review_all("all"),
